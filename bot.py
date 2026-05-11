@@ -772,23 +772,19 @@ async def setup_commands(app):
     ])
 
 def main():
-    print("=" * 50)
-    print("🤖 BOT KIỂM TRA SĐT - READY")
-    print(f"👑 Admin: {ADMIN_IDS}")
-    print(f"🏦 Bank: {BANK_INFO['bank']} - {BANK_INFO['account']}")
-    print("=" * 50)
+    print("🤖 Bot starting...")
     
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.post_init = setup_commands
+    app = Application.builder().token(BOT_TOKEN).post_init(setup_commands).build()
     
-    # User commands
+    # User handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("phone", phone_command))
     app.add_handler(CommandHandler("nap", nap_command))
+    app.add_handler(CommandHandler("naptien", naptien_command))
     app.add_handler(CommandHandler("balance", balance_command))
     app.add_handler(CommandHandler("help", help_command))
     
-    # Admin commands
+    # Admin handlers
     app.add_handler(CommandHandler("admin", admin_command))
     app.add_handler(CommandHandler("pending", admin_pending))
     app.add_handler(CommandHandler("duyet", admin_duyet))
@@ -798,17 +794,21 @@ def main():
     # Callback
     app.add_handler(CallbackQueryHandler(button_handler))
     
-    # Phone check (tin nhắn thường)
+    # Message handler
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_phone_check))
     
-    # Error
-    app.add_error_handler(error_handler)
-    
-    # Setup commands
-    app.post_init = setup_commands
-    
     print("✅ Bot ready!")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    
+    # CHẠY BOT - Python 3.14 compatible
+    import asyncio
+    try:
+        # Cách mới cho Python 3.10+
+        asyncio.run(app.run_polling(allowed_updates=Update.ALL_TYPES))
+    except RuntimeError:
+        # Fallback cho môi trường có sẵn event loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(app.run_polling(allowed_updates=Update.ALL_TYPES))
 
 if __name__ == '__main__':
     main()
